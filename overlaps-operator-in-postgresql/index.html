@@ -15,11 +15,18 @@
       <p><small><a href="/">&larr; Home</a></small></p>
       <h1>OVERLAPS Operator in PostgreSQL</h1>
       <p><small>2016-03-30</small></p>
-      <p><code>OVERLAPS</code> operator is another very useful but rarely used PostgreSQL feature. It checks if two time periods overlap. For example, this query returns <code>true</code>:</p>
+      <p><code>OVERLAPS</code> operator is another very useful but rarely used PostgreSQL feature.
+        It checks if two time periods overlap. For example, this query returns <code>true</code>:</p>
+
       <pre><code>SELECT (DATE '2016-01-10', DATE '2016-02-01') OVERLAPS (DATE '2016-01-20', DATE '2016-02-10');</code></pre>
-      <p>The endpoints of time periods can be specified as either dates (times or timestamps) like in the previous example, or as date and interval like in the next example.</p>
+
+      <p>The endpoints of time periods can be specified as either dates (times or timestamps) like in the previous
+        example, or as date and interval like in the next example.</p>
+
       <pre><code>SELECT (DATE '2016-01-10', INTERVAL '1 month') OVERLAPS (DATE '2016-01-20', INTERVAL '7 days');</code></pre>
-      <p>Please note that if the end of the first time period is equal to the beginning of the second time period then the operator returns <code>false</code>.</p>
+
+      <p>Please note that if the end of the first time period is equal to the beginning of the second time period then
+        the operator returns <code>false</code>.</p>
     </article>
     <footer>
       <small>&copy; 2017 Andrei Gridnev</small>
