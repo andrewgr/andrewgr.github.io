@@ -1,0 +1,17 @@
+body {
+  font-weight: normal;
+}
+
+h1, h2, h3, h4, h5, h6, p, ul, ol {
+  color: black;
+}
+
+main {
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+article {
+
+}
