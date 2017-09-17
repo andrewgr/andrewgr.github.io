@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Partial indexes in PostgreSQL. Part 2: Query performance</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/partial-indexes-in-postgresql-part-2-query-performance/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Use partial indexes to improve performance for tables with significant percentage of rows filtered out in typical queries with a common WHERE condition.">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>Partial indexes in PostgreSQL. Part 2: Query performance</h1>
+      <p><small>2016-03-29</small></p>
+      <p>Consider using partial indexes to improve performance for tables with significant percentage of &quot;not interesting&quot; rows &mdash; the ones filtered out in typical queries with a common WHERE condition with a constant.</p>
+<p>The more rows are excluded from a partial index, the faster it is. It improves both read and write performance of the table.</p>
+<p>Let's look at an example. Suppose we have the same table as in the <a href=\"/partial-indexes-in-postgresql-part-1-data-integrity/\">previous post</a>.</p>
+<pre><code>
+CREATE TABLE payments (
+  id              SERIAL  NOT NULL,
+  status          VARCHAR NOT NULL,
+  order_id        INTEGER NOT NULL,
+  amount_in_cents INTEGER NOT NULL);
+</code></pre>
+</p>The partial index over <code>order_id</code> column that was created in the <a href=\"/partial-indexes-in-postgresql-part-1-data-integrity/\">previous post</a></p>
+<pre><code>CREATE UNIQUE INDEX payments_order_id_idx ON payments (order_id) WHERE status = 'success';</code></pre>
+</p>excludes rows for failed payments. It should improve performance of queries like this:</p>
+<pre><code>SELECT * FROM payments WHERE order_id = 123 AND status = 'success';</code></pre>
+</p>compared to a similar index over order_id that includes all table rows. However, queries like:</p>
+<pre><code>
+SELECT * FROM payments WHERE order_id = 123 AND status = 'failure';
+SELECT * FROM payments WHERE order_id = 123;
+</code></pre>
+</p>will not use the partial index and will be slower.</p>
+<p>The query condition doesn't have to strictly match the predicate (condition) of the partial index. If it returns a subset of rows in the partial index it may still be used by query planner. For example, if an index has predicate <code>(amount_in_cents &gt; 50000)</code> then queries with condition <code>(amount_in_cents &gt; 100000)</code> may still use it.</p>
+<p>Deterministic (or &quot;immutable&quot;) functions can also be used in the partial index predicate. That means that <code>LOWER()</code> can be used, but <code>NOW()</code> cannot.</p>
+<p>Read more about partial indexes in PostgreSQL:</p>
+<ul>
+  <li><a href=\"http://goo.gl/Xc1V7K\">Speeding Up PostgreSQL With Partial Indexes</a></li>
+  <li><a href=\"http://goo.gl/jfYFUW\">Partial Indexes: Indexing Selected Rows</a></li>
+</ul>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
