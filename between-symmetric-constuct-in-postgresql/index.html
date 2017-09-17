@@ -1,9 +1,67 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Andrei Gridnev's Blog</title>
+    <title>'BETWEEN SYMMETRIC' construct in PostgreSQL</title>
+    <link rel="canonical" href="http://andreigridnev.com/between-symmetric-constuct-in-postgresql/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="X BETWEEN SYMMETRIC X AND Y is PostgreSQL extension to BETWEEN construct that swaps X and Y automatically if X > Y to always compare with a nonempty range.">
   </head>
   <body>
-    <pre>'BETWEEN SYMMETRIC' construct in PostgreSQL</pre>
+    <article>
+      <h1>'BETWEEN SYMMETRIC' construct in PostgreSQL</h1>
+      <small>2016-03-20</small>
+      <p>
+        This post is the first in the series of posts about a few handy but rarely used PostgreSQL features.
+        It deals with very basic stuff &mdash; <code>BETWEEN SYMMETRIC</code> comparison construct.</p>
+
+      <p><code>value BETWEEN X AND Y</code> construct is familiar to most if not all developers who have ever used SQL.
+        It is an equivalent to <code>value &gt;= X AND value &lt;= Y</code>. For example, query
+        <code>SELECT * FROM users WHERE id BETWEEN 2 AND 4</code> returns records with ids equal to 2, 3 and 4.</p>
+
+      <p>In a query like <code>SELECT * FROM users WHERE id BETWEEN X AND Y</code> the <code>X</code> value
+        is expected to be less than or equal to the <code>Y</code> value, otherwise the <code>X..Y</code> range
+        is empty and the query returns an empty recordset.
+
+        For example: <code>SELECT * FROM users WHERE id BETWEEN 4 AND 2</code> returns nothing even if the table
+        contains rows with ids 2, 3 and 4.</p>
+
+      <p>This maybe inconvenient when a query is built in an application code using the range boundaries provided
+        by an end-user. For example, in a Ruby on Rails app, where <code>X</code> and <code>Y</code> come from
+        the request parameters, the code may look like:</p>
+
+      <pre><code>User.where(id: params[:min]..params[:max])  \n</code></pre>
+
+      <p>If <code>params[:min]</code> is 2 and <code>params[:max]</code> is 4 then this code is converted into
+        this SQL query:</p>
+
+      <pre><code>SELECT COUNT(*) FROM \"users\" WHERE (\"users\".\"id\" BETWEEN 2 AND 4)  \n</code></pre>
+
+      <p>To handle the case when <code>params[:min]</code> is greater than <code>params[:max]</code> gracefully,
+        the provided values should be automatically swapped. For example:</p>
+
+      <pre><code>
+        min = [params[:min], params[:max]].min
+        max = [params[:min], params[:max]].max
+        User.where(id: min..max)
+      </code></pre>
+
+      <p>Alternatively, we can explicitly use <code>BETWEEN SYMMETRIC</code> in the <code>where</code> condition
+        to have the arguments automatically swapped if the range is empty. In this case the Ruby code looks like:</p>
+
+      <pre><code>
+        User.where(\"id BETWEEN SYMMETRIC ? AND ?\", params[:min], params[:max])
+      </code></pre>
+
+      <p>If <code>params[:min]</code> is 4 and <code>params[:max]</code> is 2 then this code is converted into SQL query:</p>
+
+      <pre><code>SELECT COUNT(*) FROM \"users\" WHERE (id BETWEEN SYMMETRIC 4 AND 2)  \n</code></pre>
+
+      <p>which returns records with ids equal to 2, 3 and 4.</p>
+      <p>Even though this code uses an SQL fragment in Ruby code, it is shorter, easier to understand and does not
+        reimplement the built-in DB functionality.</p>
+    </article>
+    <footer>
+      Copyright 2017 Andrei Gridnev
+    </footer>
   </body>
 </html>
