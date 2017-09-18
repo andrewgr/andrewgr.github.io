@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>Increase work_mem parameter in PostgreSQL to speed up expensive queries</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/increase-work_mem-parameter-in-postgresql-to-make-expensive-queries-faster/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>Increase <code>work_mem</code> parameter in&nbsp;PostgreSQL to speed up expensive&nbsp;queries</h1>
+      <p><small>2016-04-16</small></p>
+
+      <p>Sorting, joins, aggregations and the use of subqueries in <code>IN</code> operator in PostgreSQL may
+        require a lot of memory for internal sorting operations and hash tables. When PostgreSQL requires more memory
+        to perform one of those operations than <a href="http://www.postgresql.org/docs/current/static/runtime-config-resource.html#GUC-WORK-MEM"><code>work_mem</code></a>
+        parameter allows, it uses temp files on disk. That may be significantly slower than performing identical
+        operations in memory.</p>
+
+      <p>Lines like <code>Sort Method: external merge Disk: &lt;XXXX&gt;kB</code> show up
+        in <code>EXPLAIN ANALYZE</code> output for an expensive query if that happens. <code>work_mem</code> may
+        be increased to make such queries faster. It should be set to something higher than those
+        <code>&lt;XXXX&gt;kB</code>. Check <code>EXPLAIN ANALYZE</code> output for the query with increased
+        <code>work_mem</code> to pick a value that makes the <code>...external merge Disk...</code> message disappear.
+        The value may sometimes be almost double of those <code>&lt;XXXX&gt;kB</code>.</p>
+
+      <p>The default value for <code>work_mem</code> is <code>4MB</code>. <code>work_mem</code> can be set on
+        the database server level, for an individual session and even for an individual transaction. That allows
+        to fine tune memory usage only for expensive queries without affecting the users and connections that
+        perform inexpensive queries.</p>
+
+      <p>It is important to remember that PostgreSQL uses up to <code>work_mem</code> of memory for each sorting
+        operation or hash table in a query. In other words, if a query has four operations like that, PostgreSQL
+        may use four times <code>work_mem</code> of memory.</p>
+
+      <p>This example shows how to allow a specific expensive query to use up to 256 MB of real memory to perform
+        sorting and then resets <code>work_mem</code> for this session to the default value for the server.</p>
+
+      <pre><code>SET work_mem = '256MB';
+SELECT * FROM users ORDER BY LOWER(display_name);
+RESET work_mem;</code></pre>
+
+      <p>This example <a href="http://www.postgresql.org/docs/current/interactive/sql-set.html">sets</a>
+        <code>work_mem</code> for a single transaction and then resets it to the default value for the server.</p>
+
+      <pre><code>SET LOCAL work_mem = '256MB';
+EXPLAIN ANALYZE SELECT * FROM users ORDER BY LOWER(display_name);</code></pre>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
