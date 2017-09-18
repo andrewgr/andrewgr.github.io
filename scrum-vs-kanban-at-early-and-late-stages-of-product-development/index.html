@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>Scrum vs Kanban at early and late stages of product development</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/scrum-vs-kanban-at-early-and-late-stages-of-product-development/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Scrum works best at early stages of product development, while Kanban works better at later stages">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>Scrum vs Kanban at early and late stages of product development</h1>
+      <p><small>2016-10-23</small></p>
+      <p>I noticed that at the early stages of product development each agile dev team I've worked in used Scrum
+        and gradually migrated to Kanban as the product matured. I don't think it was a coincidence. I actually
+        think that by design Scrum works well during early stages, while Kanban may be a better choice
+        for mature products.</p>
+
+      <p>At the very beginning of the product life cycle the dev team needs to deliver a minimum viable product
+        as soon as possible. Scrum defines a framework for a process that should help to achieve that. When a team
+        follows Scrum prescriptions it works in short and very focused sprints, the stakeholders have clear
+        expectations of the outcome of each sprint, and daily standups, planning, review and retro sessions give
+        an opportunity to developers to share information, discuss priorities and scope, assess the progress, and
+        find opportunities for improvement. In ideal world, if the product owner defines the right scope and sets
+        the right priorities, every story shipped by the dev team brings the product closer to the releasable state.
+        Also, Scrum recommends building cross-functional dev teams. Such teams are especially productive when working
+        on the small codebase of a new product where each developer has a chance to work on every product component
+        and there is little need for narrow specialisation.</p>
+
+      <p>However, as the product matures after a few big post-MVP releases the development team becomes less busy
+        with new development. At that stage devs spend more time on support, bug fixing, minor improvements, and
+        paying out tech debt. As a result, it becomes increasingly harder to set a single well-defined goal for
+        a sprint. Instead, a team may have two-three smaller goals. The idea of working in sprints may become less
+        relevant as well. A lot of tasks at this stage have relatively low priority, unless they are major bugs,
+        security issues or have hard deadlines, i.e. the end of financial year.</p>
+
+      <p>In response to those changes the dev team has to adjust their development process. The devs change sprints
+        duration. Eventually they stop using sprints to structure their work at all. Sprint planning and review
+        sessions get replaced by less frequent roadmap planning and weekly backlog grooming sessions. The team
+        typically still has retros, just maybe less often. Daily standup is the only meeting that is never removed
+        from the calendar, though. In addition to that, the team finds it useful to limit the number of
+        work-in-progress items on their board to make sure that every task is completed as quickly as possible
+        and prioritises the tasks that are closer to &ldquo;done&rdquo; state over the &ldquo;not-started&rdquo; ones. This process looks more
+        like Kanban and that makes sense because at this stage the goal for the team is normally to maintain the
+        product and incrementally improve it, rather than ship a new release as soon as possible.</p>
+
+      <p>I have seen that pattern a few times. Some of my fellow dev team leads confirmed they have observed that
+        too, so I decided to share that experience.</p>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
