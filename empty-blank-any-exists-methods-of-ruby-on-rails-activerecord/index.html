@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>empty?, blank?, any?, exists? methods of Ruby on Rails ActiveRecord</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/empty-blank-any-exists-methods-of-ruby-on-rails-activerecord/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Let's have a closer look at ActiveRecord empty?, blank?, any?, exists? methods to  understand what they do exactly and when they should be used">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+
+      <h1>empty?, blank?, any?, exists? methods of Ruby on Rails ActiveRecord</h1>
+
+      <p><small></small></p>
+
+      <p>Ruby on Rails ActiveRecord provides a few methods for checking if a relation returns zero or more records.</p>
+
+      <ul>
+        <li><code>empty?</code> and <code>blank?</code> return <code>true</code> if a relation returns no records.</li>
+        <li><code>any?</code> and <code>exists?</code> return <code>true</code> if a relation returns one or more records.</li>
+      </ul>
+
+      <h4 id="emptyandblank">empty? and blank?</h4>
+
+      <p>Let's have a closer look at <a href="http://api.rubyonrails.org/classes/ActiveRecord/Relation.html#method-i-empty-3F"><code>empty?</code></a>
+        and <a href="http://api.rubyonrails.org/classes/ActiveRecord/Relation.html#method-i-blank-3F"><code>blank?</code></a>
+        methods to better understand what exactly they do and when they should be used. The docs say <code>blank?</code>
+        returns <code>true</code> if relation is blank and <code>empty?</code> returns <code>true</code> if there are
+        no records. Let's check the queries those methods generate in the Rails console to see what that means exactly:</p>
+
+      <pre><code>User.where(admin: true).empty?
+ (0.6ms)  SELECT COUNT(*) FROM `users` WHERE `users`.`admin` = 1
+=&gt; false
+User.where(admin: true).blank?
+  User Load (0.9ms)  SELECT `users`.* FROM `users` WHERE `users`.`admin` = 1
+=&gt; false
+</code></pre>
+
+      <p>In this example <code>empty?</code> retrieves just the number of records that meet the specified condition,
+        while <code>blank?</code> retrieves all those records. That means that <code>empty?</code> is faster than
+        <code>blank?</code> in this example.</p>
+
+      <p>What if a relation is already loaded and we check if it is blank/empty. </p>
+
+      <pre><code>admins = User.where(admin: true).load
+User Load (1.0ms)  SELECT `users`.* FROM `users` WHERE `users`.`admin` = 1
+admin.blank?
+=&gt; false
+admin.empty?
+=&gt; false
+</code></pre>
+
+      <p>In this example both methods rely on preloaded records in the relation rather than on the database queries.
+        That means they should have similar performance.</p>
+
+      <p>Among these two methods <code>empty?</code> is a better choice to check if a not preloaded relation is
+        not empty. If a relation is preloaded, <code>empty?</code> and <code>blank?</code> would be equally
+        good choice.</p>
+
+      <h4 id="anyandexists">any? and exists?</h4>
+
+      <p>These methods use very different approaches to check if there are any records in a relation.</p>
+
+      <p><a href="http://api.rubyonrails.org/classes/ActiveRecord/Relation.html#method-i-any-3F"><code>any?</code></a>
+        accept a block as a parameter. With a block it retrieves the records in the relation (unless they were
+        preloaded), represents them as an array and then calls
+        <a href="http://ruby-doc.org/core-2.3.0/Enumerable.html#method-i-any-3F">Enumerable#any?</a> on it.
+        Without a block this method is equivalent to <code>!empty?</code> and either retrieves the count
+        of the records in the relation from the database or relies on the preloaded records.</p>
+
+      <p><a href="http://api.rubyonrails.org/classes/ActiveRecord/FinderMethods.html#method-i-exists-3F"><code>exists?</code></a>
+        always queries the database and never relies on preloaded records: </p>
+
+      <pre><code>User.where(admin: true).exists?
+`User Exists (1.9ms)  SELECT  1 AS one FROM `users` WHERE `users`.`admin` = 1 LIMIT 1`
+</code></pre>
+
+      <p>Only one record is retrieved and that makes this method fast compared to <code>any?</code> without a block.
+        <code>exists?</code> also accepts
+        <a href="http://api.rubyonrails.org/classes/ActiveRecord/FinderMethods.html#method-i-exists-3F">various parameters</a>
+        and uses them to construct the SQL query.</p>
+
+      <p>If the block with for <code>any?</code> can be represented as a condition for <code>exists?</code> and
+        the relation is not preloaded then <code>exists?</code> would show better performance. For example,</p>
+
+      <pre><code>User.any? { |u| u.admin? }
+User Load (2.7ms)  SELECT `users`.* FROM `users`
+User.exists?(admin: true)
+User Exists (0.4ms)  SELECT  1 AS one FROM `users` WHERE `users`.`admin` = 1 LIMIT 1
+</code></pre>
+
+      <h4 id="summary">Summary</h4>
+
+      <p>Let's look at the four methods again to find out what would be the fastest way of checking that, for example, there are no users with <code>admin</code> column set to <code>true</code> in <code>users</code> table?</p>
+
+      <p><code>User.where(admin: true).blank?</code> would retrieve all the records that have <code>admin</code> equal to <code>true</code> and count them.</p>
+
+      <p><code>User.where(admin: true).empty?</code> would retrieve the count of records that have <code>admin</code> equal to <code>true</code>.</p>
+
+      <p><code>!User.where(admin: true).any?</code> would be exactly the same as the previous option.</p>
+
+      <p><code>!User.any? { |u| u.admin? }</code> would retrieve all the records from <code>users</code> table and then check if at least one of them has <code>admin?</code> equal to <code>true</code>.</p>
+
+      <p><code>!User.exists?(admin: true)</code> or <code>!User.where(admin: true).exists?</code> would retrieve the first record with <code>admin</code> set to <code>true</code>. That makes this approach fastest among those five.</p>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
