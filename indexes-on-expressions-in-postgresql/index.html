@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>Indexes on Expressions in PostgreSQL</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/indexes-on-expressions-in-postgresql/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="PostgreSQL supports indexes over expressions and deterministic functions. Consider using them to speed up queries with common expressions in WHERE clause.">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>Indexes on Expressions in PostgreSQL</h1>
+
+      <p><small>2016-04-01</small></p>
+
+      <p>PostgreSQL supports indexes over expressions computed over one or more columns. The expressions may include deterministic functions like <code>UPPER(country_code)</code> or <code>DATE_TRUNC('day', created_at)</code>, immutable user-defined functions, expressions like <code>+</code>, <code>-</code>, <code>||</code>, and so on, but cannot include non-deterministic functions, for example <code>NOW()</code>.</p>
+
+      <p>Consider using indexes over expressions if the typical table queries have a common condition based on computation. For example, this index:</p>
+
+<pre><code>CREATE INDEX index_users_on_lower_username
+ON users (LOWER(username));</code></pre>
+
+      <p>will be used by queries that have a condition on <code>LOWER(username)</code> in <code>WHERE</code> clause. For example:</p>
+
+<pre><code>SELECT *
+FROM users
+WHERE LOWER(username) = 'andreigridnev';
+</code></pre>
+
+<p>and</p>
+
+<pre><code>SELECT *
+FROM users
+WHERE LOWER(username) = 'andreigridnev' AND disabled_at IS NULL;
+</code></pre>
+
+      <p>Without this index PostgreSQL has to scan all table rows and apply <code>LOWER(...)</code> function
+        to the value of <code>username</code> column in each row to evaluate <code>WHERE</code> condition.
+        That is way slower that scanning an index.</p>
+
+      <p>In addition to improving query performance, indexes over expressions can be used to ensure data integrity.
+        For example, the index in the example can be made unique:</p>
+
+<pre><code>CREATE UNIQUE INDEX index_users_on_lower_username
+ON users (LOWER(username));</code></pre>
+
+      <p>and it won't allow to insert rows with values like 'andreigridnev' or 'Andreigridnev' in <code>username</code>
+        column into 'users' table if it already has a row with 'AndreiGridnev' value in that column.</p>
+
+      <p>More about indexes on expressions:</p>
+
+      <ul>
+        <li><a href="http://goo.gl/qtt9sX">Indexes on Expressions (PostgreSQL Docs)</a></li>
+        <li><a href="http://goo.gl/8N3IoO">Postgres Indexes &mdash; Expression/Functional Indexing</a></li>
+      </ul>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
