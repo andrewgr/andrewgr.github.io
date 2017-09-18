@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>DB maintenance commands in PostgreSQL: Analyze, Reindex, Vacuum</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/analyze-reindex-vacuum/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>DB maintenance commands in PostgreSQL: Analyze, Reindex, Vacuum</h1>
+
+      <p><small>2016-04-01</small></p>
+
+      <p>Actively updated database tables in PostgreSQL sometimes require maintenance because of table and index
+        bloat, obsolete and suboptimal query plans and sometimes corrupted indexes. Bloated tables and indexes
+        occupy too much of disk space and memory, suboptimal queries and corrupted indexes slow down database queries.
+        As a result, database performance may significantly degrade. PostgreSQL has a few commands to help developers
+        solve those problems: ANALYZE, VACUUM, REINDEX.</p>
+
+      <h4 id="analyze">ANALYZE</h4>
+
+      <p><a href="http://www.postgresql.org/docs/current/static/sql-analyze.html"><code>ANALYZE</code></a>
+        collects statistics about the contents of all or several columns in a table or entire database.
+        These statistics are then used by the query planner to produce efficient execution plans for queries.</p>
+
+      <p>Examples:</p>
+
+      <ul>
+        <li><code>ANALYZE users;</code> collects statistics for <code>users</code> table.</li>
+        <li><code>ANALYZE VERBOSE users;</code> does exactly the same plus prints progress messages.</li>
+        <li><code>ANALYZE users (id, display_name);</code> collects statistics for <code>id</code> and
+          <code>display_name</code> columns of <code>users</code> table.</li>
+        <li><code>ANALYZE;</code> collects statistics for all the database tables.</li>
+      </ul>
+
+      <p>Please note, that <code>ANALYZE</code> doesn't read or update indexes. It deals only with table/column
+        contents. <code>ANALYZE</code>. Other queries may read from the table while <code>ANALYZE</code> is running.</p>
+
+      <p>Use <code>ANALYZE</code> when the contents of a table has changed significantly: a few percents of records
+        in a table have been added, updated or deleted. It won't hurt to run <code>ANALYZE</code> just before
+        or right after adding an index to a table. That sometimes helps query planner to properly use
+        the new index.</p>
+
+      <h4 id="vacuum">VACUUM</h4>
+
+      <p><a href="http://www.postgresql.org/docs/current/static/sql-vacuum.html"><code>VACUUM</code></a> reclaims
+        storage occupied by dead records. Dead records in a table are the deleted or the previous versions of updated
+        records. Such records are only marked as unavailable but still occupy disk space, making table scans slower.
+        <code>VACUUM</code> also has an option that tells it to <code>ANALYZE</code> the table.</p>
+
+      <p>There are two very different <code>VACUUM</code> versions. Just <code>VACUUM</code> command reorganises
+        live records in a table and makes the allocated storage space available for new records. However,
+        this storage space doesn't return to the operating system. This command can be run in parallel with other
+        read and write operations on the table. <code>VACUUM FULL</code> exclusively locks the table, creates a new
+        table file, copies only live records to this file, then deletes the old table file. The reclaimed storage
+        space is returned to the system in this case. This command doesn't allow any other read and write operations
+        on the vacuumed table.</p>
+
+      <p>Examples:</p>
+
+      <ul>
+        <li><code>VACUUM users;</code> vacuums <code>users</code> table.</li>
+        <li><code>VACUUM VERBOSE users;</code> vacuums <code>users</code> table and prints progress messages.</li>
+        <li><code>VACUUM FULL users;</code> fully vacuums <code>users</code> table. Other queries cannot
+          access <code>users</code> table while vacuuming is running.</li>
+        <li><code>VACUUM ANALYZE users;</code> vacuums and analyses <code>users</code> table.</li>
+        <li><code>VACUUM FULL VERBOSE ANALYZE users;</code> fully vacuums <code>users</code> table and displays
+          progress messages.</li>
+        <li><code>VACUUM;</code> vacuums all the tables in the database the current user has access to.</li>
+      </ul>
+
+      <p>Even though PostgreSQL can autovacuum tables itself after a certain number of rows gets marked as deleted,
+        some developers prefer to run <code>VACUUM ANALYZE</code> on tables with a lot of read/write operations
+        on a custom schedule. For example, at the least busy time of the day.</p>
+
+      <p>Use <code>VACUUM</code> when the contents of a table has changed significantly: a few percents of records
+        in a table have been added, updated or deleted.</p>
+
+      <h4 id="reindex">REINDEX</h4>
+
+      <p><a href="http://www.postgresql.org/docs/current/static/sql-reindex.html"><code>REINDEX</code></a>
+        rebuilds an existing index or all indexes for a table or entire database. This command is helpful when
+        an index becomes corrupted and is not used anymore, or when an index gets bloated after significant
+        changes in the table contents.</p>
+
+      <p>Examples:</p>
+
+      <ul>
+        <li><code>REINDEX INDEX idx_users_on_display_name;</code> reindexes index
+          <code>idx_users_on_display_name</code>.</li>
+        <li><code>REINDEX TABLE users;</code> reindexes <code>users</code> table.</li>
+        <li><code>REINDEX VERBOSE TABLE users;</code> reindexes <code>users</code> table
+          and prints progress messages.</li>
+        <li><code>REINDEX DATABASE app_production;</code> reindexes all tables
+          in <code>app_production</code> database.</li>
+      </ul>
+
+      <p>In my opinion, running <code>VACUUM ANALYZE</code> and then <code>REINDEX</code> commands on the biggest
+        tables in the application database really helps to improve its performance.</p>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
