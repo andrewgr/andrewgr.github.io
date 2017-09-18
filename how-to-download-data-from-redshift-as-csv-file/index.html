@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8660221-18"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments)};
+      gtag('js', new Date());
+
+      gtag('config', 'UA-8660221-18');
+    </script>
+    <title>How to download data from a Redshift table as a CSV file</title>
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="/main.css">
+    <link rel="canonical" href="http://andreigridnev.com/how-to-download-data-from-redshift-as-csv-file/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+  </head>
+  <body>
+    <main>
+    <article>
+      <p><small><a href="/">&larr; Home</a></small></p>
+      <h1>How to download data from a Redshift table as a CSV file</h1>
+      <p><small>2014-09-29</small></p>
+
+      <p>Recently I needed to create a scheduled task that stores the result of a <code>SELECT</code> query to an Amazon Redshift table as CSV file and loads that into a third-party business intelligence service. I was expecting the <code>SELECT</code> query to return a few millions rows. I had to implement this task in Ruby.</p>
+
+      <p>First, I tried to select the data in chunks of 100,000 rows using multiple <code>SELECT</code> queries and append each query result into a CSV file. That solution was too slow and I decided to look for an alternative.</p>
+
+      <p>I immediately found <code>UNLOAD</code> command in Redshift documentation that allows to unload the result of a query to one or multiple files on S3. This command accepts SQL query, S3 object path prefix and a few options. Its syntax looks like this:</p>
+
+      <pre><code>UNLOAD ('select_statement')
+TO 's3://object_path_prefix'
+[ WITH ] CREDENTIALS [AS] 'aws_access_credentials'
+[ option [ ... ] ]
+where option is
+{ MANIFEST
+| DELIMITER [ AS ] 'delimiter_char'
+| FIXEDWIDTH [ AS ] 'fixedwidth_spec' }
+| ENCRYPTED
+| GZIP
+| ADDQUOTES
+| NULL [ AS ] 'null_string'
+| ESCAPE
+| ALLOWOVERWRITE
+| PARALLEL [ { ON | TRUE } | { OFF | FALSE } ]
+A simple UNLOAD query would look like this:
+      UNLOAD ('
+  SELECT
+    id,
+    email
+  FROM users
+')
+TO 's3://bucket_name/file_prefix_'
+CREDENTIALS 'aws_access_key_id=KEY1;aws_secret_access_key=KEY2'
+ESCAPE
+PARALLEL OFF;
+</code></pre>
+
+      <p>However, there are a few important things about this command that may need to be configured. In this post
+        I want to cover only few of them. </p>
+
+      <p><code>UNLOAD</code> may create more than one data file as it splits the data into chunks of 6.2 GB. There
+        is <code>MANIFEST</code> option to create a JSON file with the list of data file names. I was not expecting
+        that much data so I didn't use this option.</p>
+
+      <p>If the data file already exists in the specified location then the command  fails.
+        <code>ALLOWOVERWRITE</code> option allows to avoid that and simply overwrite the data and manifest files.</p>
+
+      <p>The data files use <code>|</code> (pipe) character as the column separator by default. That was not
+        important in my case because the service supported pipes as the separators. If you need commas as
+        the separators then use <code>DELIMITER AS ','</code> option.</p>
+
+      <p>The data files don't have column headers but sometimes they may be required.</p>
+
+      <p>I added the column headers as the result of another query that was merged with the result of the first
+        query using UNION. As long as <code>UNION</code> fails if the queries return rows with different data types
+        in the same columns, I had to type cast the all the values in the result to <code>VARCHAR</code>. In addition
+        to this, <code>UNION</code> doesn't guarantee the row order in the result, so its result has to be sorted
+        by some column in the order that ensures that the column names come first. In my case I sorted the rows
+        by ID column in descending order so that the name always goes before any numerical ID.</p>
+
+      <p>The final query looked like this:</p>
+
+      <pre><code>UNLOAD ('
+  (
+    SELECT
+      ''User ID'',
+      ''E-mail'',
+      ''Order Count'',
+      ''Signup Date'',
+      ''Last Visit Date'',
+      ''Last Visit Date Group''
+  )
+  UNION
+  (
+    SELECT
+      CAST(id AS varchar),
+      email,
+      CAST(order_count AS varchar),
+      signup_date,
+      CAST(last_visit AS varchar),
+      last_visit_date_group
+    FROM user_details
+    WHERE email &lt;&gt; ''''
+  )
+  ORDER BY 1 DESC
+')
+TO 's3://bucket_name/file_prefix_'
+CREDENTIALS 'aws_access_key_id=KEY1;aws_secret_access_key=KEY2'
+ALLOWOVERWRITE
+MANIFEST
+ESCAPE
+PARALLEL OFF;
+</code></pre>
+      <p>I used <code>s3cmd</code> utility to download the data file and send that to the service.</p>
+    </article>
+    <footer>
+      <small>&copy; 2017 Andrei Gridnev</small>
+    </footer>
+  </main>
+  </body>
+</html>
