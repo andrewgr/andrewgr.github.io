@@ -19,6 +19,17 @@
   </head>
   <body>
     <main>
+      <header>
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-5007049405028800"
+          data-ad-slot="2178813423"
+          data-ad-format="auto"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+      </header>
     <article>
       <p><small><a href="/">&larr; Home</a></small></p>
       <h1>'BETWEEN SYMMETRIC' construct in PostgreSQL</h1>
@@ -52,11 +63,9 @@
       <p>To handle the case when <code>params[:min]</code> is greater than <code>params[:max]</code> gracefully,
         the provided values should be automatically swapped. For example:</p>
 
-      <pre><code>
-min = [params[:min], params[:max]].min
+<pre><code>min = [params[:min], params[:max]].min
 max = [params[:min], params[:max]].max
-User.where(id: min..max)
-      </code></pre>
+User.where(id: min..max)</code></pre>
 
       <p>Alternatively, we can explicitly use <code>BETWEEN SYMMETRIC</code> in the <code>where</code> condition
         to have the arguments automatically swapped if the range is empty. In this case the Ruby code looks like:</p>

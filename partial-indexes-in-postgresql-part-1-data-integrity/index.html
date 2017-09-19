@@ -19,13 +19,29 @@
   </head>
   <body>
     <main>
+      <header>
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-5007049405028800"
+          data-ad-slot="2178813423"
+          data-ad-format="auto"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+      </header>
     <article>
       <p><small><a href="/">&larr; Home</a></small></p>
       <h1>Partial indexes in PostgreSQL. Part 1: Data Integrity</h1>
       <p><small>2016-03-27</small></p>
       <p>A partial index is an index that is built over a subset of table rows that meet some condition. A partial index can ensure data integrity by enforcing constraints on that subset of table rows.</p>
       <p>Let's look at an example. Suppose we have to track each successful and failed payment for every order in an e-commerce application. An order may have any number of failed payments but no more than one successful payment. We can model payments with the following table, assuming that <code>status</code> column has <code>success</code> and <code>failure</code> values for successful and failed payments respectively:</p>
-      <pre><code>CREATE TABLE payments (  \n  id              SERIAL  NOT NULL,\n  status          VARCHAR NOT NULL,\n  order_id        INTEGER NOT NULL,\n  amount_in_cents INTEGER NOT NULL\n);\n</code></pre>
+<pre><code>CREATE TABLE payments (  
+  id              SERIAL  NOT NULL,
+  status          VARCHAR NOT NULL,
+  order_id        INTEGER NOT NULL,
+  amount_in_cents INTEGER NOT NULL
+);</code></pre>
 <p>To allow the table to have no more than one record with <code>success</code> status and any number of records with <code>failure</code> status for each <code>order_id</code> we can create a unique partial index:</p>
       <pre><code>CREATE UNIQUE INDEX payments_order_id_idx ON payments (order_id)  \nWHERE status = 'success';  \n</code></pre>
 <p>Let's see how this constraint is applied. We can add two rows to the table with the same <code>order_id</code> and different statuses:</p>
