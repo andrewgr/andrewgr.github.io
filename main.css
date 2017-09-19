@@ -3,7 +3,7 @@ body {
 }
 
 main {
-  max-width: 70rem;
+  max-width: 75rem;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -15,4 +15,8 @@ h1, h2, h3, h4, h5, h6, p, ul, ol {
 
 h1 {
   font-size: 3.6rem;
+}
+
+header {
+  margin: 0 0 2em 0;
 }
