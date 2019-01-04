@@ -15,30 +15,19 @@
     <link rel="stylesheet" href="/main.css">
     <link rel="canonical" href="http://andreigridnev.com/partial-indexes-in-postgresql-part-1-data-integrity/" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta 
-      name="description" 
+    <meta
+      name="description"
       content="A partial index is built over a subset of table rows that meet some condition. It can enforce data integrity constraints on that subset of rows.">
   </head>
   <body>
     <main>
-      <header>
-        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-        <ins class="adsbygoogle"
-          style="display:block"
-          data-ad-client="ca-pub-5007049405028800"
-          data-ad-slot="2178813423"
-          data-ad-format="auto"></ins>
-        <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-      </header>
     <article>
       <p><small><a href="/">&larr; Home</a></small></p>
       <h1>Partial indexes in PostgreSQL. Part 1: Data Integrity</h1>
       <p><small>2016-03-27</small></p>
       <p>A partial index is an index that is built over a subset of table rows that meet some condition. A partial index can ensure data integrity by enforcing constraints on that subset of table rows.</p>
       <p>Let's look at an example. Suppose we have to track each successful and failed payment for every order in an e-commerce application. An order may have any number of failed payments but no more than one successful payment. We can model payments with the following table, assuming that <code>status</code> column has <code>success</code> and <code>failure</code> values for successful and failed payments respectively:</p>
-<pre><code>CREATE TABLE payments (  
+<pre><code>CREATE TABLE payments (
   id              SERIAL  NOT NULL,
   status          VARCHAR NOT NULL,
   order_id        INTEGER NOT NULL,
@@ -56,7 +45,7 @@
       <p>Also, check <a href="http://goo.gl/OjgwmR">PostgreSQL docs</a> to learn more about partial indexes.</p>
     </article>
     <footer>
-      <small>&copy; 2017 Andrei Gridnev</small>
+      <small>&copy; 2014-2019 Andrei Gridnev</small>
     </footer>
   </main>
   </body>
